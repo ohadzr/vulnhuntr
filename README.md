@@ -51,12 +51,12 @@ We recommend using [pipx](https://github.com/pypa/pipx) or Docker to easily inst
 
 Using Docker:
 ```bash
-docker build -t vulnhuntr https://github.com/protectai/vulnhuntr.git#main
+docker build -t vulnhuntr https://github.com/ohadzr/vulnhuntr.git#main
 ```
 
 Using pipx:
 ```bash
-pipx install git+https://github.com/protectai/vulnhuntr.git --python python3.10
+pipx install git+https://github.com/ohadzr/vulnhuntr.git --python python3.10
 ```
 
 Alternatively you can install directly from source using poetry:

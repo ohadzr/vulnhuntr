@@ -2,7 +2,7 @@
 name = "vulnhuntr"
 version = "0.1.0"
 description = ""
-authors = ["Dan <dan@protectai.com>", "Marcello <marcello@protectai.com>"]
+authors = ["Dan <dan@protectai.com>", "Marcello <marcello@protectai.com>", "Ohad <ohadz@nvidia.com"]
 readme = "README.md"
 
 [tool.poetry.scripts]
