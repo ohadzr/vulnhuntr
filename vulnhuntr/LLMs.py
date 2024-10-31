@@ -191,6 +191,7 @@ class LlamaCpp(LLM):
     def send_message(self, messages: List[Dict[str, str]], max_tokens: int, response_model: BaseModel) -> str:
         try:
             prompt = "\n".join([f"{msg['content']}" for msg in messages])
+            log.debug("Loading prompt", prompt=prompt)
             response = ""
             for token in self.llm(prompt, max_tokens=max_tokens, stream=True):
                 text = token['choices'][0]['text']
