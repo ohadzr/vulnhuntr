@@ -340,6 +340,7 @@ def run():
             Instructions(instructions=README_SUMMARY_PROMPT_TEMPLATE).to_xml()
             ).decode()
         )
+        log.info("Summary:", summary=summary)
         summary = extract_between_tags("summary", summary)[0]
         log.info("README summary complete", summary=summary)
     else:
