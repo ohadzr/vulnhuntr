@@ -3,7 +3,7 @@ import re
 import argparse
 import structlog
 from vulnhuntr.symbol_finder import SymbolExtractor
-from vulnhuntr.LLMs import Claude, ChatGPT
+from vulnhuntr.LLMs import Claude, ChatGPT, LlamaCpp
 from vulnhuntr.prompts import *
 from rich import print
 from typing import List, Generator
