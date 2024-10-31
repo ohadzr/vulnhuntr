@@ -329,7 +329,7 @@ def run():
         llm = Claude()
     elif args.llm == 'gpt':
         llm = ChatGPT()
-    elif llm_type == "llama_cpp":
+    elif args.llm == "llama_cpp":
         llm = LlamaCpp(model_path=args.model)
 
     readme_content = repo.get_readme_content()
@@ -367,7 +367,7 @@ def run():
                 llm = Claude(system_prompt=system_prompt)
             elif args.llm == 'gpt':
                 llm = ChatGPT(system_prompt=system_prompt)
-            elif llm_type == "llama_cpp":
+            elif args.llm == "llama_cpp":
                 llm =  LlamaCpp(system_prompt=system_prompt, model_path=args.model)
 
             user_prompt =(
