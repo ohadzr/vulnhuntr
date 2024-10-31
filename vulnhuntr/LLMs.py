@@ -191,6 +191,7 @@ class LlamaCpp(LLM):
     def send_message(self, messages: List[Dict[str, str]], max_tokens: int, response_model: BaseModel) -> str:
         try:
             prompt = "\n".join([f"{msg['content']}" for msg in messages])
+            # TODO: remove two lines below
             print(prompt)
             log.debug("Loading prompt", prompt=prompt)
             response = ""

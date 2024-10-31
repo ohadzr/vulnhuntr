@@ -274,9 +274,11 @@ def extract_between_tags(tag: str, string: str, strip: bool = False) -> list[str
     https://github.com/anthropics/anthropic-cookbook/blob/main/misc/how_to_enable_json_mode.ipynb
     """
     ext_list = re.findall(f"<{tag}>(.+?)</{tag}>", string, re.DOTALL)
+    if not ext_list:
+        return string
     if strip:
         ext_list = [e.strip() for e in ext_list]
-    return ext_list
+    return ext_list[0]
 
 def print_readable(report: Response) -> None:
     for attr, value in vars(report).items():
@@ -341,7 +343,7 @@ def run():
             ).decode()
         )
         log.info("Summary:", summary=summary)
-        summary = extract_between_tags("summary", summary)[0]
+        summary = extract_between_tags("summary", summary)
         log.info("README summary complete", summary=summary)
     else:
         log.warning("No README summary found")
