@@ -61,7 +61,7 @@ pipx install git+https://github.com/ohadzr/vulnhuntr.git --python python3.10
 
 Alternatively you can install directly from source using poetry:
 ```bash
-git clone https://github.com/protectai/vulnhuntr
+git clone https://github.com/ohadzr/vulnhuntr
 cd vulnhuntr && poetry install
 ```
 
