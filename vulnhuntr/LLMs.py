@@ -159,7 +159,7 @@ class ChatGPT(LLM):
 
 
 class LlamaCpp(LLM):
-    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 4096, n_threads: int =4, verbose: bool = False) -> None:
+    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 16384, n_threads: int =4, verbose: bool = False) -> None:
         super().__init__(system_prompt)
         if not model_path:
             model_path = os.getenv("LLAMA_MODEL_PATH")
