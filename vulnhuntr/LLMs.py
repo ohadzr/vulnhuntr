@@ -5,6 +5,7 @@ import anthropic
 import os
 import openai
 import dotenv
+from llama_cpp import Llama
 
 dotenv.load_dotenv()
 
@@ -155,3 +156,55 @@ class ChatGPT(LLM):
         response = response.choices[0].message.content
         cleaned_response = self._clean_response(response)
         return cleaned_response
+
+
+class LlamaCpp(LLM):
+    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 4096, n_threads: int =4, verbose: bool = False) -> None:
+        super().__init__(system_prompt)
+        if not model_path:
+            model_path = os.getenv("LLAMA_MODEL_PATH")
+        if not model_path:
+            raise ValueError("Model path must be provided either in the constructor or as an environment variable LLAMA_MODEL_PATH")
+        self.llm = Llama(model_path=model_path, n_ctx=n_ctx, n_threads=n_threads, verbose=verbose)
+        self.config = {
+            "input_prefix": "<|start_header_id|>user<|end_header_id|>\n\n",
+            "input_suffix": "<|eot_id|>\n\n",
+            "assistant_prefix": "<|start_header_id|>assistant<|end_header_id|>\n\n",
+            "assistant_suffix": "<|eot_id|>\n\n",
+            #"pre_prompt": "You are a helpful, smart, kind, and efficient AI assistant. You always fulfill the user's requests to the best of your ability.",
+            "pre_prompt_prefix": "<|start_header_id|>system<|end_header_id|>\n\n",
+            "pre_prompt_suffix": "<|eot_id|>\n\n",
+            "antiprompt": ["<|start_header_id|>", "<|eot_id|>"]
+        }
+
+    def create_messages(self, user_prompt: str) -> List[Dict[str, str]]:
+        messages = [
+            {"role": "system",
+             "content": f"{self.config['pre_prompt_prefix']}{self.system_prompt}{self.config['pre_prompt_suffix']}"},
+
+            {"role": "user",
+             "content": f"{self.config['input_prefix']}{user_prompt}{self.config['input_suffix']}"}
+
+        ]
+        return messages
+
+    def send_message(self, messages: List[Dict[str, str]], max_tokens: int, response_model: BaseModel) -> str:
+        try:
+            prompt = "\n".join([f"{msg['content']}" for msg in messages])
+            response = ""
+            for token in self.llm(prompt, max_tokens=max_tokens, stream=True):
+                text = token['choices'][0]['text']
+                # Check if the new text contains any antiprompt
+                if any(ap in text for ap in self.config['antiprompt']):
+                    break
+                response += text
+            return response
+        except Exception as e:
+            raise LLMError(f"An error occurred while processing the request: {str(e)}") from e
+
+    def get_response(self, response: str) -> str:
+        # TODO: maybe clean response?
+        return response
+
+    def _log_response(self, response: str) -> None:
+        log.debug("Received chat response", extra=response)

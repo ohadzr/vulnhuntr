@@ -300,7 +300,8 @@ def run():
     parser = argparse.ArgumentParser(description='Analyze a GitHub project for vulnerabilities. Export your ANTHROPIC_API_KEY before running.')
     parser.add_argument('-r', '--root', type=str, required=True, help='Path to the root directory of the project')
     parser.add_argument('-a', '--analyze', type=str, help='Specific path or file within the project to analyze')
-    parser.add_argument('-l', '--llm', type=str, choices=['claude', 'gpt'], default='claude', help='LLM client to use (default: claude)')
+    parser.add_argument('-l', '--llm', type=str, choices=['claude', 'gpt', 'llama_cpp'], default='llama_cpp', help='LLM client to use (default: llama_cpp)')
+    parser.add_argument('-p', '--model', type=str, help='Path to the llama_cpp model file')
     parser.add_argument('-v', '--verbosity', action='count', default=0, help='Increase output verbosity (-v for INFO, -vv for DEBUG)')
     args = parser.parse_args()
 
@@ -328,6 +329,8 @@ def run():
         llm = Claude()
     elif args.llm == 'gpt':
         llm = ChatGPT()
+    elif llm_type == "llama_cpp":
+        llm = LlamaCpp(model_path=args.model)
 
     readme_content = repo.get_readme_content()
     if readme_content:
@@ -364,6 +367,8 @@ def run():
                 llm = Claude(system_prompt=system_prompt)
             elif args.llm == 'gpt':
                 llm = ChatGPT(system_prompt=system_prompt)
+            elif llm_type == "llama_cpp":
+                llm =  LlamaCpp(system_prompt=system_prompt, model_path=args.model)
 
             user_prompt =(
                     FileCode(file_path=str(py_f), file_source=content).to_xml() + b'\n' +
