@@ -159,13 +159,14 @@ class ChatGPT(LLM):
 
 
 class LlamaCpp(LLM):
-    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 16384, n_threads: int =4, verbose: bool = False) -> None:
+    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 16384, n_threads: int =4,
+                 temperature: float = 0.7, verbose: bool = False) -> None:
         super().__init__(system_prompt)
         if not model_path:
             model_path = os.getenv("LLAMA_MODEL_PATH")
         if not model_path:
             raise ValueError("Model path must be provided either in the constructor or as an environment variable LLAMA_MODEL_PATH")
-        self.llm = Llama(model_path=model_path, n_ctx=n_ctx, n_threads=n_threads, verbose=verbose)
+        self.llm = Llama(model_path=model_path, n_ctx=n_ctx, n_threads=n_threads, temperature=temperature, verbose=verbose)
         self.config = {
             "input_prefix": "<|start_header_id|>user<|end_header_id|>\n\n",
             "input_suffix": "<|eot_id|>\n\n",
