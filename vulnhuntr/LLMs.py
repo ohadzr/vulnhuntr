@@ -69,8 +69,14 @@ class LLM:
         self._log_response(response)
 
         response_text = self.get_response(response)
+        # TODO: remove two lines below
+        print(response_text)
+        log.debug("got response:", response_text=response_text)
         if response_model:
             response_text = self._validate_response(response_text, response_model) if response_model else response_text
+            # TODO: remove two lines below
+            print(response_text)
+            log.debug("response validated:", response_text=response_text)
         self._add_to_history("assistant", response_text)
         return response_text
 
