@@ -71,7 +71,7 @@ class LLM:
         response_text = self.get_response(response)
         # TODO: remove two lines below
         print(response_text)
-        log.debug("got response:", response_text=response_text)
+        # log.debug("got response:", response_text=response_text)
         if response_model:
             response_text = self._validate_response(response_text, response_model) if response_model else response_text
             # TODO: remove two lines below
@@ -165,7 +165,7 @@ class ChatGPT(LLM):
 
 
 class LlamaCpp(LLM):
-    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 16384, n_threads: int =4,
+    def __init__(self, system_prompt: str = "", model_path: str = "", n_ctx: int = 4096, n_threads: int =1,
                  temperature: float = 0.7, verbose: bool = False) -> None:
         super().__init__(system_prompt)
         if not model_path:
@@ -200,13 +200,13 @@ class LlamaCpp(LLM):
             prompt = "\n".join([f"{msg['content']}" for msg in messages])
             # TODO: remove two lines below
             print(prompt)
-            log.debug("Loading prompt", prompt=prompt)
+            # log.debug("Loading prompt", prompt=prompt)
             response = ""
             for token in self.llm(prompt, max_tokens=max_tokens, stream=True):
                 text = token['choices'][0]['text']
                 # Check if the new text contains any antiprompt
-                if any(ap in text for ap in self.config['antiprompt']):
-                    break
+                # if any(ap in text for ap in self.config['antiprompt']):
+                #     break
                 response += text
             return response
         except Exception as e:

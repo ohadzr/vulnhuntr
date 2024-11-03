@@ -338,8 +338,8 @@ def run():
     if readme_content:
         log.info("Summarizing project README")
         summary = llm.chat(
-            (ReadmeContent(content=readme_content).to_xml() + b'\n' +
-            Instructions(instructions=README_SUMMARY_PROMPT_TEMPLATE).to_xml()
+            (Instructions(instructions=README_SUMMARY_PROMPT_TEMPLATE).to_xml()  + b'\n' +
+             ReadmeContent(content=readme_content).to_xml()
             ).decode()
         )
         log.info("Summary:", summary=summary)
