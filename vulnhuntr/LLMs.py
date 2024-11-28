@@ -4,6 +4,7 @@ import re
 from json import JSONDecodeError
 from typing import List, Union, Dict, Any
 
+from langchain_community.callbacks.fiddler_callback import MODEL_NAME
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, ValidationError
 import anthropic
@@ -17,6 +18,9 @@ from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 from vulnhuntr.utils import extract_between_tags
 
 dotenv.load_dotenv()
+API_KEY = os.getenv('API_KEY')
+NVCF_FUNCTION_ID = os.getenv('NVCF_FUNCTION_ID')
+NVCF_MODEL_NAME = os.getenv('NVCF_MODEL_NAME')
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +60,7 @@ class LLM:
         except ValidationError as e:
             log.warning("Response validation failed", exc_info=e)
             raise LLMError("Validation failed") from e
-1
+
     def _add_to_history(self, role: str, content: str) -> None:
         self.history.append({"role": role, "content": content})
 
@@ -91,8 +95,8 @@ class LLM:
 class ChatGPT(LLM):
     def __init__(self, system_prompt: str = "") -> None:
         super().__init__(system_prompt)
-        self.model = "meta/llama-3.1-405b-instruct"
-        self.function_id = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/eb0b34c6-6d51-4e9f-9d36-c5c26ddc5443"
+        self.model = NVCF_MODEL_NAME
+        self.function_id = NVCF_FUNCTION_ID
 
         log.info("Using model: ", self.model)
 

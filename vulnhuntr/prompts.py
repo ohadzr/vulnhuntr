@@ -260,7 +260,7 @@ VULN_SPECIFIC_BYPASSES_AND_PROMPTS = {
             "shell.py;.jpg",
             ".htaccess",
             "/proc/self/cmdline",
-            "../../config.py/."
+            "../../.env/."
         ]
     },
     "SQLI": {
