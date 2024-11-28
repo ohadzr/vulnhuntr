@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg">
-  <circle id="myCircle" cx="40" cy="40" r="24" fill="green"/>
-  <script>
-    document.getElementById('myCircle').setAttribute('fill', 'red');
-  </script>
-</svg>

