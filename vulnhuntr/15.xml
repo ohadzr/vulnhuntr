@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <circle cx="40" cy="40" r="24" fill="green"/>
+  <script xlink:href="path/to/your/script.js"></script>
+</svg>
