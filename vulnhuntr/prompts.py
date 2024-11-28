@@ -338,7 +338,7 @@ GUIDELINES_TEMPLATE = """Reporting Guidelines:
 4. Proof of Concept:
    - Include a PoC exploit or detailed exploitation steps for each vulnerability.
    - Ensure PoCs are specific to the analyzed code, not generic examples.
-   - Review the code path ofthe potential vulnerability and be sure that the PoC bypasses any security controls in the code path.
+   - Review the code path of the potential vulnerability and be sure that the PoC bypasses any security controls in the code path.
 """
 
 ANALYSIS_APPROACH_TEMPLATE = """Analysis Instructions:
@@ -391,5 +391,5 @@ The project's README summary is provided in <readme_summary> tags. Use this to u
 
 Remember, you have many opportunities to respond and request additional context. Use them wisely to build a comprehensive understanding of the application's security posture.
 
-Output your findings in JSON format, conforming to the schema in <response_format> tags.
-"""
+Output your findings in JSON format"""#, conforming to the schema in <json_response> tags.
+#"""

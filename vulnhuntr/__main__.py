@@ -7,11 +7,10 @@ from vulnhuntr.LLMs import Claude, ChatGPT, LlamaCpp
 from vulnhuntr.prompts import *
 from rich import print
 from typing import List, Generator
-from enum import Enum
 from pathlib import Path
-from pydantic_xml import BaseXmlModel, element
-from pydantic import BaseModel, Field
 
+from vulnhuntr.utils import extract_between_tags, print_readable, Response, ReadmeContent, ReadmeSummary, Instructions, \
+    ResponseFormat, AnalysisApproach, Guidelines, FileCode, PreviousAnalysis, ExampleBypasses, CodeDefinitions
 
 structlog.configure(
     processors=[
@@ -27,64 +26,6 @@ faulthandler.enable()
 
 log = structlog.get_logger("vulnhuntr")
 
-class VulnType(str, Enum):
-    LFI = "LFI"
-    RCE = "RCE"
-    SSRF = "SSRF"
-    AFO = "AFO"
-    SQLI = "SQLI"
-    XSS = "XSS"
-    IDOR = "IDOR"
-
-class ContextCode(BaseModel):
-    name: str = Field(description="Function or Class name")
-    reason: str = Field(description="Brief reason why this function's code is needed for analysis")
-    code_line: str = Field(description="The single line of code where where this context object is referenced.")
-
-class Response(BaseModel):
-    scratchpad: str = Field(description="Your step-by-step analysis process. Output in plaintext with no line breaks.")
-    analysis: str = Field(description="Your final analysis. Output in plaintext with no line breaks.")
-    poc: str = Field(description="Proof-of-concept exploit, if applicable.")
-    confidence_score: int = Field(description="0-10, where 0 is no confidence and 10 is absolute certainty because you have the entire user input to server output code path.")
-    vulnerability_types: List[VulnType] = Field(description="The types of identified vulnerabilities")
-    context_code: List[ContextCode] = Field(description="List of context code items requested for analysis, one function or class name per item. No standard library or third-party package code.")
-
-class ReadmeContent(BaseXmlModel, tag="readme_content"):
-    content: str
-
-class ReadmeSummary(BaseXmlModel, tag="readme_summary"):
-    readme_summary: str
-
-class Instructions(BaseXmlModel, tag="instructions"):
-    instructions: str
-
-class ResponseFormat(BaseXmlModel, tag="response_format"):
-    response_format: str
-
-class AnalysisApproach(BaseXmlModel, tag="analysis_approach"):
-    analysis_approach: str
-
-class Guidelines(BaseXmlModel, tag="guidelines"):
-    guidelines: str
-
-class FileCode(BaseXmlModel, tag="file_code"):
-    file_path: str = element()
-    file_source: str = element()
-
-class PreviousAnalysis(BaseXmlModel, tag="previous_analysis"):
-    previous_analysis: str
-
-class ExampleBypasses(BaseXmlModel, tag="example_bypasses"):
-    example_bypasses: str
-
-class CodeDefinition(BaseXmlModel, tag="code"):
-    name: str = element()
-    context_name_requested: str = element()
-    file_path: str = element()
-    source: str = element()
-
-class CodeDefinitions(BaseXmlModel, tag="context_code"):
-    definitions: List[CodeDefinition] = []
 
 class RepoOps:
     def __init__(self, repo_path: Path | str ) -> None:
@@ -265,38 +206,10 @@ class RepoOps:
         if path_to_analyze.is_file():
             return [ path_to_analyze ]
         elif path_to_analyze.is_dir():
-            return path_to_analyze.rglob('*.py')
+            return list(path_to_analyze.rglob('*.py')) + list(path_to_analyze.rglob('*.go')) + list(path_to_analyze.rglob('*.yaml'))
         else:
             raise FileNotFoundError(f"Specified analyze path does not exist: {path_to_analyze}")
 
-def extract_between_tags(tag: str, string: str, strip: bool = False) -> list[str]:
-    """
-    https://github.com/anthropics/anthropic-cookbook/blob/main/misc/how_to_enable_json_mode.ipynb
-    """
-    ext_list = re.findall(f"<{tag}>(.+?)</{tag}>", string, re.DOTALL)
-    if not ext_list:
-        return string
-    if strip:
-        ext_list = [e.strip() for e in ext_list]
-    return ext_list[0]
-
-def print_readable(report: Response) -> None:
-    for attr, value in vars(report).items():
-        print(f"{attr}:")
-        if isinstance(value, str):
-            # For multiline strings, add indentation
-            lines = value.split('\n')
-            for line in lines:
-                print(f"  {line}")
-        elif isinstance(value, list):
-            # For lists, print each item on a new line
-            for item in value:
-                print(f"  - {item}")
-        else:
-            # For other types, just print the value
-            print(f"  {value}")
-        print('-' * 40)
-        print()  # Add an empty line between attributes
 
 def run():
     parser = argparse.ArgumentParser(description='Analyze a GitHub project for vulnerabilities. Export your ANTHROPIC_API_KEY before running.')
@@ -338,9 +251,9 @@ def run():
     if readme_content:
         log.info("Summarizing project README")
         summary = llm.chat(
-            (Instructions(instructions=README_SUMMARY_PROMPT_TEMPLATE).to_xml()  + b'\n' +
+            (Instructions(instructions=README_SUMMARY_PROMPT_TEMPLATE).to_xml() + b'\n' +
              ReadmeContent(content=readme_content).to_xml()
-            ).decode()
+             ).decode()
         )
         log.info("Summary:", summary=summary)
         summary = extract_between_tags("summary", summary)
@@ -354,8 +267,8 @@ def run():
         log.info(f"Performing initial analysis", file=str(py_f))
 
         system_prompt = (Instructions(instructions=SYS_PROMPT_TEMPLATE).to_xml() + b'\n' +
-                        ReadmeSummary(readme_summary=summary).to_xml()
-                        ).decode()
+                         ReadmeSummary(readme_summary=summary).to_xml()
+                         ).decode()
 
         # This is the Initial analysis
         with py_f.open(encoding='utf-8') as f:
@@ -374,14 +287,12 @@ def run():
                 llm =  LlamaCpp(system_prompt=system_prompt, model_path=args.model)
 
             user_prompt =(
+                    ResponseFormat(response_format=json.dumps(Response.model_json_schema(), indent=4)).to_xml() + b'\n' +
                     FileCode(file_path=str(py_f), file_source=content).to_xml() + b'\n' +
                     Instructions(instructions=INITIAL_ANALYSIS_PROMPT_TEMPLATE).to_xml() + b'\n' +
                     AnalysisApproach(analysis_approach=ANALYSIS_APPROACH_TEMPLATE).to_xml() + b'\n' +
                     PreviousAnalysis(previous_analysis='').to_xml() + b'\n' +
-                    Guidelines(guidelines=GUIDELINES_TEMPLATE).to_xml() + b'\n' +
-                    ResponseFormat(response_format=json.dumps(Response.model_json_schema(), indent=4
-                    )
-                ).to_xml()
+                    Guidelines(guidelines=GUIDELINES_TEMPLATE).to_xml()
             ).decode()
 
             initial_analysis_report: Response = llm.chat(user_prompt, response_model=Response)
@@ -437,20 +348,16 @@ def run():
                                     print(f"First two lines from source: {snippet}\n")
 
                         vuln_specific_user_prompt = (
-                            FileCode(file_path=str(py_f), file_source=content).to_xml() + b'\n' +
-                            definitions.to_xml() + b'\n' +  # These are all the requested context functions and classes
-                            ExampleBypasses(
-                                example_bypasses='\n'.join(VULN_SPECIFIC_BYPASSES_AND_PROMPTS[vuln_type]['bypasses'])
-                            ).to_xml() + b'\n' +
-                            Instructions(instructions=VULN_SPECIFIC_BYPASSES_AND_PROMPTS[vuln_type]['prompt']).to_xml() + b'\n' +
-                            AnalysisApproach(analysis_approach=ANALYSIS_APPROACH_TEMPLATE).to_xml() + b'\n' +
-                            PreviousAnalysis(previous_analysis=previous_analysis).to_xml() + b'\n' +
-                            Guidelines(guidelines=GUIDELINES_TEMPLATE).to_xml() + b'\n' +
-                            ResponseFormat(
-                                response_format=json.dumps(
-                                    Response.model_json_schema(), indent=4
-                                )
-                            ).to_xml()
+                            # These are all the requested context functions and classes
+                                ResponseFormat(response_format=json.dumps(Response.model_json_schema(), indent=4)).to_xml() + b'\n' +
+                                FileCode(file_path=str(py_f), file_source=content).to_xml() + b'\n' +
+                                ExampleBypasses(
+                                example_bypasses='\n'.join(VULN_SPECIFIC_BYPASSES_AND_PROMPTS[vuln_type]['bypasses'])).to_xml() + b'\n' +
+                                Instructions(instructions=VULN_SPECIFIC_BYPASSES_AND_PROMPTS[vuln_type]['prompt']).to_xml() + b'\n' +
+                                AnalysisApproach(analysis_approach=ANALYSIS_APPROACH_TEMPLATE).to_xml() + b'\n' +
+                                PreviousAnalysis(previous_analysis=previous_analysis).to_xml() + b'\n' +
+                                Guidelines(guidelines=GUIDELINES_TEMPLATE).to_xml() + b'\n' +
+                                definitions.to_xml()
                         ).decode()
 
                         secondary_analysis_report: Response = llm.chat(vuln_specific_user_prompt, response_model=Response)
